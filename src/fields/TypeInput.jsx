@@ -3,6 +3,7 @@ import { Form, Input } from 'antd';
 import { Extra, FieldLabel, DataApiUrl } from '../support';
 import GlobalStore from '../lib/store';
 import { InputFieldIcon } from '../lib/svgIcons';
+import { v4 as uuidv4 } from 'uuid';
 
 const TypeInput = ({
   id,
@@ -19,9 +20,11 @@ const TypeInput = ({
   requiredSign,
   dataApiUrl,
   fieldIcons = true,
+  meta_uuid = false,
 }) => {
   const form = Form.useFormInstance();
   const [showPrefix, setShowPrefix] = useState(true);
+  const { setFieldsValue } = form;
   const extraBefore = extra
     ? extra.filter((ex) => ex.placement === 'before')
     : [];
@@ -52,6 +55,23 @@ const TypeInput = ({
   const onChange = (e) => {
     updateDataPointName(e.target.value);
   };
+
+  const handleGenerateUUID = useCallback(() => {
+    console.log(meta_uuid, currentValue, 'meta_uuid and currentValue');
+    if (!currentValue && meta_uuid) {
+      const uuid = uuidv4();
+      GlobalStore.update((s) => {
+        s.current = { ...s.current, [id]: uuid };
+      });
+      setFieldsValue({
+        [id]: uuid,
+      });
+    }
+  }, [currentValue, id, meta_uuid, setFieldsValue]);
+
+  useEffect(() => {
+    handleGenerateUUID();
+  }, [handleGenerateUUID]);
 
   return (
     <Form.Item
@@ -90,6 +110,7 @@ const TypeInput = ({
           onFocus={() => setShowPrefix(false)}
           onChange={onChange}
           addonAfter={addonAfter}
+          disabled={meta_uuid ? true : false}
           addonBefore={addonBefore}
           prefix={
             fieldIcons && showPrefix && !currentValue && <InputFieldIcon />

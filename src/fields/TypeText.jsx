@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Form } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import { Extra, FieldLabel, DataApiUrl } from '../support';
+import { v4 as uuidv4 } from 'uuid';
 
 const TypeText = ({
   id,
@@ -14,13 +15,35 @@ const TypeText = ({
   extra,
   requiredSign,
   dataApiUrl,
+  meta_uuid = false,
 }) => {
+  const form = Form.useFormInstance();
+  const { setFieldsValue } = form;
   const extraBefore = extra
     ? extra.filter((ex) => ex.placement === 'before')
     : [];
   const extraAfter = extra
     ? extra.filter((ex) => ex.placement === 'after')
     : [];
+
+  const currentValue = form.getFieldValue([id]);
+
+  console.log(currentValue, 'currentValue****');
+
+  const handleGenerateUUID = useCallback(() => {
+    console.log(meta_uuid, currentValue, 'meta_uuid and currentValue');
+    if (!currentValue && meta_uuid) {
+      const uuid = uuidv4();
+      console.log(uuid, 'UUID');
+      setFieldsValue({
+        [id]: uuid,
+      });
+    }
+  }, [currentValue, id, meta_uuid, setFieldsValue]);
+
+  useEffect(() => {
+    handleGenerateUUID();
+  }, [handleGenerateUUID]);
 
   return (
     <Form.Item
@@ -50,7 +73,10 @@ const TypeText = ({
         rules={rules}
         required={required}
       >
-        <TextArea row={4} />
+        <TextArea
+          row={4}
+          disabled={meta_uuid}
+        />
       </Form.Item>
       {!!extraAfter?.length &&
         extraAfter.map((ex, exi) => (
